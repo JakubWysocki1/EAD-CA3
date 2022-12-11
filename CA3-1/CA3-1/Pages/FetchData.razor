@@ -1,0 +1,157 @@
+﻿@page "/fetchdata"
+@inject HttpClient Http
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+
+<PageTitle>News</PageTitle>
+
+
+<div class="row ml-1">
+    <div id="Title" class="m-3">
+        <h1>Top News in @currentCountry</h1>
+    </div>
+
+
+    <div id="FormSelect" class="ml-auto mr-3 mt-2 form-control-sm">
+
+        <InputSelect ValueChanged="@((string value)=>ChangeCountry(value))" ValueExpression="@(()=>country)" Value="country">
+                @foreach (var country in Enum.GetValues(typeof(Countries)))
+                {
+                        <option value="@country">@country</option>
+                    
+                }
+        </InputSelect>
+    </div>
+    
+</div>
+
+
+
+
+
+<div class="row" id="newscontainer">
+@if(news != null)
+{
+    @foreach(var info in news)
+    {
+        @foreach(var article in info.articles)
+        {
+            @if (article.content == null || article.description == null || article.urlToImage == null) {
+
+            } else
+            {   
+                <div class="col-lg-3" >
+                        <div class="card mb-4" id="card">
+                          <img id="cardimage"src="@article.urlToImage" class="card-img-top" alt="Article Image">
+                          <div class="card-body" id="cardbody">
+                            <h5 id="cardtitle" class="card-title">@article.title</h5>
+                            <p id="cardcontent" class="card-text">@article.content</p>
+                            <a href="@article.url" class="btn btn-primary">Read more</a>
+                          </div>
+                        </div>
+                 </div>
+
+            }
+        }
+    }
+}
+</div>
+
+
+
+@code {
+    private Root[]? news;
+    //List<Root> news;
+    //HttpClient htp;
+    //HttpResponseMessage responseMessage;
+    //HttpRequestMessage requestMessage;
+
+      protected override async Task OnInitializedAsync()
+      {
+    //    htp = new HttpClient();
+    //    requestMessage = new HttpRequestMessage
+    //        {
+    //            Method = HttpMethod.Get,
+    //            RequestUri = new Uri("https://newsapi.org/v2/top-headlines?country=ie&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
+    //        };
+    //    responseMessage = await htp.SendAsync(requestMessage);
+    //    Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+        //news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
+        news = await Http.GetFromJsonAsync<Root[]>("sample-data/json.json");
+        
+
+    }
+
+
+    private String country;
+    private String currentCountry = "Ireland";
+ 
+    public enum Countries
+    {
+        Ireland, GreatBritain, Poland, USA, France
+    }
+
+    protected async Task ChangeCountry(string valuein)
+    {
+        string tag;
+        if (valuein == "Ireland")
+        {
+            tag = "ie";
+        }
+        else if (valuein == "GreatBritain"){
+            tag = "gb";
+        }
+        else if (valuein == "USA")
+        {
+            tag = "us";
+        }
+        else if (valuein == "Poland")
+        {
+            tag = "pl";
+        }
+        else
+        {
+            tag = "fr";
+        }
+
+    //    Console.WriteLine(valuein);
+    //    htp = new HttpClient();
+    //    requestMessage = new HttpRequestMessage
+    //        {
+    //            Method = HttpMethod.Get,
+    //            RequestUri = new Uri($"https://newsapi.org/v2/top-headlines?country={tag}&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
+    //        };
+    //    responseMessage = await htp.SendAsync(requestMessage);
+    //    Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+    //    news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
+    //    currentCountry = valuein;
+
+    }
+
+
+    public class Article
+    {
+        public Source source { get; set; }
+        public string author { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public string url { get; set; }
+        public string urlToImage { get; set; }
+        public DateTime publishedAt { get; set; }
+        public string content { get; set; }
+    }
+
+    public class Root
+    {
+        public string status { get; set; }
+        public int totalResults { get; set; }
+        public List<Article> articles { get; set; }
+    }
+
+    public class Source
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+    }
+}
