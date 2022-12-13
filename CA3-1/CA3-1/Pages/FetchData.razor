@@ -6,26 +6,29 @@
 
 <PageTitle>News</PageTitle>
 
-
-<div class="row ml-1">
-    <div id="Title" class="m-3">
-        <h1>Top News in @currentCountry</h1>
+<table class="mb-2">
+<tr>
+    <td class="m-6">
+    <div id="Title">
+        <h1>Top News @current</h1>
     </div>
-
-
-    <div id="FormSelect" class="ml-auto mr-3 mt-2 form-control-sm">
-
-        <InputSelect ValueChanged="@((string value)=>ChangeCountry(value))" ValueExpression="@(()=>country)" Value="country">
+    </td>
+    <td>
+    <div id="FormSelect" class="">
+        <InputSelect ValueChanged="@((string value)=>ChangeCountry(value))" ValueExpression="@(()=>country)" Value="country" class="form-select">
+                <option style="padding-top:20px;  " disabled selected>News from other countries</option>
                 @foreach (var country in Enum.GetValues(typeof(Countries)))
                 {
-                        <option value="@country">@country</option>
-                    
+                    <option  value="@country">@country</option> 
                 }
         </InputSelect>
     </div>
-    
+    </td>
+</tr>
+</table>
+<div id="searchbox" class="form-group">
+    <input id="text" placeholder="Search a Topic" @bind="topic" @onblur="searchTopic" @onkeydown="Enter"/>
 </div>
-
 
 
 
@@ -47,7 +50,7 @@
                           <div class="card-body" id="cardbody">
                             <h5 id="cardtitle" class="card-title">@article.title</h5>
                             <p id="cardcontent" class="card-text">@article.content</p>
-                            <a href="@article.url" class="btn btn-primary">Read more</a>
+                            <a style="" href="@article.url" class="btn btn-primary">Read more</a>
                           </div>
                         </div>
                  </div>
@@ -61,35 +64,49 @@
 
 
 @code {
-    private Root[]? news;
-    //List<Root> news;
-    //HttpClient htp;
-    //HttpResponseMessage responseMessage;
-    //HttpRequestMessage requestMessage;
+    //private Root[]? news;
+    List<Root>? news;
+    HttpClient htp;
+    HttpResponseMessage responseMessage;
+    HttpRequestMessage requestMessage;
 
-      protected override async Task OnInitializedAsync()
-      {
-    //    htp = new HttpClient();
-    //    requestMessage = new HttpRequestMessage
-    //        {
-    //            Method = HttpMethod.Get,
-    //            RequestUri = new Uri("https://newsapi.org/v2/top-headlines?country=ie&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
-    //        };
-    //    responseMessage = await htp.SendAsync(requestMessage);
-    //    Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
-        //news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
-        news = await Http.GetFromJsonAsync<Root[]>("sample-data/json.json");
-        
+    protected override async Task OnInitializedAsync()
+    {
+        htp = new HttpClient();
+        requestMessage = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri("https://newsapi.org/v2/top-headlines?country=ie&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
+                };
+        responseMessage = await htp.SendAsync(requestMessage);
+        Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+        news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
+        //news = await Http.GetFromJsonAsync<Root[]>("sample-data/json.json");
+
 
     }
 
 
     private String country;
-    private String currentCountry = "Ireland";
- 
+    private String current = "Ireland";
+
     public enum Countries
     {
         Ireland, GreatBritain, Poland, USA, France
+    }
+
+
+    protected async Task makeRequest(string URIin)
+    {
+        htp = new HttpClient();
+        requestMessage = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(URIin)
+            };
+        responseMessage = await htp.SendAsync(requestMessage);
+        Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+        news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
     }
 
     protected async Task ChangeCountry(string valuein)
@@ -115,18 +132,32 @@
             tag = "fr";
         }
 
-    //    Console.WriteLine(valuein);
-    //    htp = new HttpClient();
-    //    requestMessage = new HttpRequestMessage
-    //        {
-    //            Method = HttpMethod.Get,
-    //            RequestUri = new Uri($"https://newsapi.org/v2/top-headlines?country={tag}&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
-    //        };
-    //    responseMessage = await htp.SendAsync(requestMessage);
-    //    Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
-    //    news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
-    //    currentCountry = valuein;
+        string searchCountryURI = $"https://newsapi.org/v2/top-headlines?country={tag}&apiKey=d4c27959759c4b1eaa2eded567cd8d03";
+        Console.WriteLine(valuein);
+        makeRequest(searchCountryURI); 
+        current = "in " + valuein;
+        
 
+    }
+
+    private string topic;
+
+    public void Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            searchTopic();
+        }
+    }
+
+    protected async Task searchTopic()
+    {
+        Console.WriteLine(topic);
+        string searchTopicURI = $"https://newsapi.org/v2/everything?q={topic}&sortBy=popularity&apiKey=d4c27959759c4b1eaa2eded567cd8d03";
+
+        makeRequest(searchTopicURI);
+        current = "about " + topic;
+    
     }
 
 
