@@ -130,8 +130,9 @@ img {
     border-color: rgb(124, 124, 124);
 }
 
-#cardimage{
-   min-height:8em;
+#cardimage {
+    min-height: 8em;
+    max-height: 250px;
 }
 
 #cardtitle{
