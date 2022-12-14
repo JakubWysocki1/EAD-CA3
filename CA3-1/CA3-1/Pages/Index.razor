@@ -1,15 +1,205 @@
 ﻿@page "/"
 @inject HttpClient Http
 @using System.Text.Json
+@using System.Text.Json.Serialization
 
-<PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<PageTitle>News</PageTitle>
 
-Welcome to your new app.
+<table class="mb-2">
+<tr>
+    <td class="m-6">
+    <div id="Title">
+        <h1>Top News @current</h1>
+    </div>
+    </td>
+    <td>
+    <div id="FormSelect" class="">
+        <InputSelect ValueChanged="@((string value)=>ChangeCountry(value))" ValueExpression="@(()=>country)" Value="country" class="form-select">
+            <option style="padding-top:20px;  " disabled selected>News from other countries</option>
+            @foreach (var country in Enum.GetValues(typeof(Countries)))
+            {
+                <option  value="@country">@country</option> 
+            }
+        </InputSelect>
+    </div>
+    </td>
+</tr>
+</table>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div id="searchbox" class="form-group">
+    <input id="text" placeholder="Search a Topic" @bind:event="oninput" @bind="InputTest"/>
+     
+    @if(disableState == true)
+    {
+        <button disabled class="ml-5" id="searchbutton" style="border-radius: 0.4em; color:rgb(0, 0, 0, 0.7); margin-left:5px" @onclick="searchTopic">Search</button>
+    }
+    else
+    {
+        <button class="button" id="searchbutton" style="border-radius: 0.4em; color:rgb(0, 0, 0, 0.7); margin-left:5px" @onclick="searchTopic">Search</button>
+    }
+</div>
 
-@code{
 
+
+
+<div class="row" id="newscontainer">
+    @if (news != null)
+    {
+        @foreach (var info in news)
+        {
+            @foreach (var article in info.articles)
+            {
+                @if (article.content == null || article.description == null || article.urlToImage == null)
+                {
+
+                }
+                else
+                {   
+                <div class="col-lg-3" >
+                    <div class="card mb-4" id="card">
+                        <img id="cardimage"src="@article.urlToImage" class="card-img-top" alt="Article Image">
+                        <div class="card-body" id="cardbody">
+                            <h5 id="cardtitle" class="card-title">@article.title</h5>
+                            <p id="cardcontent" class="card-text">@article.content</p>
+                            <a style="" href="@article.url" class="btn btn-primary">Read more</a>
+                        </div>
+                    </div>
+                </div>
+
+                }
+            }
+        }
+
+    }
+    else
+    {   
+        <br>
+        <p style="color:white">Loading</p> 
+        <br/>
+
+    }
+</div>
+
+
+
+@code {
+    private Root[]? news;
+    //List<Root>? news;
+    HttpClient htp;
+    HttpResponseMessage responseMessage;
+    HttpRequestMessage requestMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //htp = new HttpClient();
+        //requestMessage = new HttpRequestMessage
+        //    {
+        //        Method = HttpMethod.Get,
+        //        RequestUri = new Uri("https://newsapi.org/v2/top-headlines?country=ie&apiKey=d4c27959759c4b1eaa2eded567cd8d03")
+        //    };
+        //responseMessage = await htp.SendAsync(requestMessage);
+        //Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+        //news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
+        news = await Http.GetFromJsonAsync<Root[]>("sample-data/json.json");
+    }
+
+    private String country;
+    private String current = "Ireland";
+
+    public enum Countries
+    {
+        Ireland, GreatBritain, Poland, USA, France
+    }
+
+    protected async Task makeRequest(string URIin)
+    {
+        //htp = new HttpClient();
+        //requestMessage = new HttpRequestMessage
+        //    {
+        //        Method = HttpMethod.Get,
+        //        RequestUri = new Uri(URIin)
+        //    };
+        //responseMessage = await htp.SendAsync(requestMessage);
+        //Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+        //news = JsonSerializer.Deserialize<List<Root>>("[" + await responseMessage.Content.ReadAsStringAsync() + "]");
+    }
+
+    protected async Task ChangeCountry(string valuein)
+    {
+        string tag;
+        if (valuein == "Ireland")
+        {
+            tag = "ie";
+        }
+        else if (valuein == "GreatBritain")
+        {
+            tag = "gb";
+        }
+        else if (valuein == "USA")
+        {
+            tag = "us";
+        }
+        else if (valuein == "Poland")
+        {
+            tag = "pl";
+        }
+        else
+        {
+            tag = "fr";
+        }
+
+        //string searchCountryURI = $"https://newsapi.org/v2/top-headlines?country={tag}&apiKey=d4c27959759c4b1eaa2eded567cd8d03";
+        Console.WriteLine(valuein);
+        //await makeRequest(searchCountryURI);
+        current = "in " + valuein;
+    }
+
+    private String topicin;
+    bool disableState = true;
+    public string InputTest
+    {
+        get {
+            return topicin; 
+        }
+        set {
+            topicin = value;
+            disableState = topicin?.Length < 1 ? true : false;
+        }
+    }
+
+    protected async Task searchTopic()
+    {
+        string topic = topicin;
+        Console.WriteLine(topic);
+        //string searchTopicURI = $"https://newsapi.org/v2/everything?q={topic}&sortBy=popularity&apiKey=d4c27959759c4b1eaa2eded567cd8d03";
+        //await makeRequest(searchTopicURI);
+        current = "about " + topic;
+
+    }
+
+    public class Article
+    {
+        public Source source { get; set; }
+        public string author { get; set; }
+        public string title { get; set; }
+        public string description { get; set; }
+        public string url { get; set; }
+        public string urlToImage { get; set; }
+        public DateTime publishedAt { get; set; }
+        public string content { get; set; }
+    }
+
+    public class Root
+    {
+        public string status { get; set; }
+        public int totalResults { get; set; }
+        public List<Article> articles { get; set; }
+    }
+
+    public class Source
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+    }
 }

@@ -104,7 +104,7 @@ a, .btn-link {
 
 /* Index page styling */
 img {
-    
+    max-height: 250px;
 }
 
 #newscontainer {
@@ -160,6 +160,11 @@ img {
 #text {
     border-radius: 0.4em;
     padding-left: 0.5em;
+    
+}
+
+#searchbutton {
+
     
 }
 
